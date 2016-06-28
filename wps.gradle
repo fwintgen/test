@@ -1,0 +1,76 @@
+/**
+ * Please check https://stash.westernacher.com/projects/BP/repos/gradle-wps-plugins/browse for more information and
+ * updates. This file should be very stable and should need updates only rarely.
+ *
+ * It is a gradle init script that must be 'applied from:' settings.gradle. Otherwise it would configure the
+ * buildscript.repositories too late in the build process.
+ */
+
+gradle.allprojects {
+    if (rootProject.hasProperty('wpsRepositoryPassword') && wpsRepositoryPassword) {
+        buildscript.repositories {
+            maven {
+                name = 'Westernacher Artifactory Releases'
+                credentials {
+                    username wpsRepositoryUser
+                    password wpsRepositoryPassword
+                }
+                url 'https://artifacts.westernacher.com/artifactory/aggregated-releases'
+            }
+            maven {
+                name = 'Westernacher Artifactory Snapshots'
+                credentials {
+                    username wpsRepositoryUser
+                    password wpsRepositoryPassword
+                }
+                url 'https://artifacts.westernacher.com/artifactory/aggregated-snapshots'
+            }
+        }
+        repositories {
+            clear()
+            maven {
+                name = 'Westernacher Artifactory Releases'
+                credentials {
+                    username wpsRepositoryUser
+                    password wpsRepositoryPassword
+                }
+                url 'https://artifacts.westernacher.com/artifactory/aggregated-releases'
+            }
+            maven {
+                name = 'Westernacher Artifactory Snapshots'
+                credentials {
+                    username wpsRepositoryUser
+                    password wpsRepositoryPassword
+                }
+                url 'https://artifacts.westernacher.com/artifactory/aggregated-snapshots'
+            }
+        }
+    } else {
+        buildscript.repositories {
+            jcenter()
+            mavenLocal()
+        }
+        repositories {
+            clear()
+            jcenter()
+            mavenLocal()
+        }
+    }
+}
+
+gradle.rootProject {
+    if (!rootProject.hasProperty('wpsRepositoryUser') || !wpsRepositoryUser ||
+            !rootProject.hasProperty('wpsRepositoryPassword') || !wpsRepositoryPassword) {
+        project.logger.warn("WpsRepositoryPlugin: property wpsRepositoryUser or wpsRepositoryPassword is unset! " +
+                "Falling back to non WPS repositories.")
+    }
+
+    task showRepositories << {
+        buildscript.repositories.each {
+            println "buildscript repository: ${it.name} ('${it.url}')"
+        }
+        repositories.each {
+            println "main repository: ${it.name} ('${it.url}')"
+        }
+    }
+}
